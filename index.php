@@ -1,8 +1,9 @@
 <?php
 	// SQL Tutorial - BestJobsLK.com
-	// Version: 5
-	// Updated on: 2022-02-12 by Dileep
+	// Version: 5.1
+	// Updated on: 2022-08-16 by Dileep
 	// Last updated:
+	// DESCRIBE Query Default values shows None if Null
 	// mysqli_fetch_row
 	// Query History
 ?>
@@ -1088,58 +1089,65 @@
 		}
 	}
 	if (isset($_POST['submit'])) {
-		$query = $_POST['query'];
-		$_SESSION['history'][] = $query;
-		$result_set = mysqli_query($connection, $query);
-		// checking if the result_set has records or boolean value if the query is DML
-		if (gettype($result_set) == 'object') {
-			$count = mysqli_num_rows($result_set);
-			$message = "{$count} record(s)";
-			// getting the list of column headings
-			$fields = mysqli_fetch_fields($result_set);
-			// printing the field names
-			$html = '<table>';
-			$html .= '<thead>';
-			$html .= '<tr>';
-			foreach($fields as $field) {
-				$html .= '<th>' . $field->name . '</th>';
-				$is_numeric[] = true;
-			}
-			$html .= '</tr>';
-			$html .= '</thead>';
-			$html .= '<tbody>';
-			// printing the values of the records
-			while ($result = mysqli_fetch_row($result_set)) {
+		if ( strlen($_POST['query']) > 0 ) {
+			$query = $_POST['query'];
+			$_SESSION['history'][] = $query;
+			$result_set = mysqli_query($connection, $query);
+			// checking if the result_set has records or boolean value if the query is DML
+			if (gettype($result_set) == 'object') {
+				$count = mysqli_num_rows($result_set);
+				$message = "{$count} record(s)";
+				// getting the list of column headings
+				$fields = mysqli_fetch_fields($result_set);
+				// printing the field names
+				$html = '<table>';
+				$html .= '<thead>';
 				$html .= '<tr>';
-				$index  = 0;
-				foreach($result as $val) {
-					if (is_null($val)) {
-						$html .= '<td class="null">NULL</td>';
-					} else {
-						$html .= '<td>' . $val . '</td>';
-					}
-					if (!is_numeric($val)) { $is_numeric[$index] = false; }
-					$index++;
+				foreach($fields as $field) {
+					$html .= '<th>' . $field->name . '</th>';
+					$is_numeric[] = true;
 				}
 				$html .= '</tr>';
-			}
-			$html .= '</tbody>';
- 			$html .= '</table>';
-			// prepare the css for numeric columns
-			$css = '';
-			foreach($is_numeric as $i => $column) {
-				if ( $column == true ) {
-					$css .= "table td:nth-child(" . ($i + 1) . "), th:nth-child(" . ($i + 1) . ")  { text-align: right } "; 
+				$html .= '</thead>';
+				$html .= '<tbody>';
+				// printing the values of the records
+				while ($result = mysqli_fetch_row($result_set)) {
+					$html .= '<tr>';
+					$index  = 0;
+					foreach($result as $val) {
+						if (is_null($val)) {
+							// check if it is a DESCRIBE TABLE query
+							if ( strtoupper(substr($query, 0,8)) == 'DESCRIBE' ) {
+								$html .= '<td class="null">None</td>';
+							} else {
+								$html .= '<td class="null">NULL</td>';
+							}
+						} else {
+							$html .= '<td>' . $val . '</td>';
+						}
+						if (!is_numeric($val)) { $is_numeric[$index] = false; }
+						$index++;
+					}
+					$html .= '</tr>';
 				}
-			}
-			
+				$html .= '</tbody>';
+				$html .= '</table>';
+				// prepare the css for numeric columns
+				$css = '';
+				foreach($is_numeric as $i => $column) {
+					if ( $column == true ) {
+						$css .= "table td:nth-child(" . ($i + 1) . "), th:nth-child(" . ($i + 1) . ")  { text-align: right } "; 
+					}
+				}
+		} else {
+			$message = "Please enter a query."
+		}
 		} elseif ($result_set == true) {
 			$count = mysqli_affected_rows($connection);
 			$message = "{$count} record(s) affected.";
 		} else {
 			$message = mysqli_error($connection);
 		}
-
 	}
 
 ?>
