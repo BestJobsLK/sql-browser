@@ -1117,7 +1117,7 @@
 					foreach($result as $val) {
 						if (is_null($val)) {
 							// check if it is a DESCRIBE TABLE query
-							if ( strtoupper(substr($query, 0,8)) == 'DESCRIBE' ) {
+							if ( strtoupper(substr($query, 0,7)) == 'DESCRIB' || strtoupper(substr($query, 0,7)) == 'EXPLAIN' ) {
 								$html .= '<td class="null">None</td>';
 							} else {
 								$html .= '<td class="null">NULL</td>';
@@ -1131,7 +1131,7 @@
 					$html .= '</tr>';
 				}
 				$html .= '</tbody>';
-				$html .= '</table>';
+				 $html .= '</table>';
 				// prepare the css for numeric columns
 				$css = '';
 				foreach($is_numeric as $i => $column) {
@@ -1139,14 +1139,16 @@
 						$css .= "table td:nth-child(" . ($i + 1) . "), th:nth-child(" . ($i + 1) . ")  { text-align: right } "; 
 					}
 				}
+				
+			} elseif ($result_set == true) {
+				$count = mysqli_affected_rows($connection);
+				$message = "{$count} record(s) affected.";
+			} else {
+				$message = mysqli_error($connection);
+			}
+	
 		} else {
-			$message = "Please enter a query."
-		}
-		} elseif ($result_set == true) {
-			$count = mysqli_affected_rows($connection);
-			$message = "{$count} record(s) affected.";
-		} else {
-			$message = mysqli_error($connection);
+			$message = "Please input your query";
 		}
 	}
 
